@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Explorer - Databricks App</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔍 Data Explorer</h1>
+            <p class="subtitle">Browse and query your Databricks data</p>
+        </header>
+
+        <div class="main-content">
+            <!-- Sidebar for navigation -->
+            <aside class="sidebar">
+                <div class="section">
+                    <h3>📁 Data Browser</h3>
+                    <div class="browser-section">
+                        <label>Catalog:</label>
+                        <select id="catalogSelect" class="select-box">
+                            <option value="">Select Catalog...</option>
+                        </select>
+                    </div>
+                    <div class="browser-section">
+                        <label>Schema:</label>
+                        <select id="schemaSelect" class="select-box" disabled>
+                            <option value="">Select Schema...</option>
+                        </select>
+                    </div>
+                    <div class="browser-section">
+                        <label>Table:</label>
+                        <select id="tableSelect" class="select-box" disabled>
+                            <option value="">Select Table...</option>
+                        </select>
+                    </div>
+                    <button id="loadTableBtn" class="btn btn-primary" disabled>Load Table Data</button>
+                </div>
+
+                <div class="section">
+                    <h3>⚡ Quick Actions</h3>
+                    <button id="customQueryBtn" class="btn btn-secondary">Custom SQL Query</button>
+                </div>
+            </aside>
+
+            <!-- Main content area -->
+            <main class="content">
+                <div id="querySection" class="query-section" style="display: none;">
+                    <h3>Custom SQL Query</h3>
+                    <textarea id="queryInput" class="query-input" placeholder="SELECT * FROM catalog.schema.table LIMIT 10"></textarea>
+                    <div class="query-actions">
+                        <button id="executeQueryBtn" class="btn btn-primary">Execute Query</button>
+                        <button id="cancelQueryBtn" class="btn btn-secondary">Cancel</button>
+                    </div>
+                </div>
+
+                <div id="statusBar" class="status-bar">
+                    <span id="statusMessage">Ready</span>
+                </div>
+
+                <div id="resultsSection" class="results-section">
+                    <div class="results-header">
+                        <h3>Results</h3>
+                        <span id="rowCount" class="row-count"></span>
+                    </div>
+                    <div id="resultsContainer" class="results-container">
+                        <p class="empty-state">Select a table or run a query to see results</p>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="/app.js"></script>
+</body>
+</html>

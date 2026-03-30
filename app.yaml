@@ -1,0 +1,19 @@
+# Databricks App Configuration
+command:
+  - "python"
+  - "app.py"
+
+resources:
+  # SQL Warehouse for data queries
+  sql_warehouse:
+    name: "Starter Warehouse"
+    permission: "CAN_USE"
+
+env:
+  # These environment variables are automatically populated by Databricks Apps
+  - name: DATABRICKS_SERVER_HOSTNAME
+    value: "{{secrets.databricks.serverHostname}}"
+  - name: DATABRICKS_HTTP_PATH
+    value: "{{resources.sql_warehouse.http_path}}"
+  - name: DATABRICKS_TOKEN
+    value: "{{secrets.databricks.token}}"
