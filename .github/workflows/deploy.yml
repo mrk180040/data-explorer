@@ -19,14 +19,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-      
       - name: Install Databricks CLI
-        run: |
-          pip install databricks-cli
+        uses: databricks/setup-cli@v0.295.0
       
       # Option 1: Using Service Principal (RECOMMENDED FOR PRODUCTION)
       - name: Configure Databricks CLI with Service Principal
