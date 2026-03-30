@@ -22,31 +22,27 @@ jobs:
       - name: Install Databricks CLI
         uses: databricks/setup-cli@v0.295.0
       
-      # Option 1: Using Service Principal (RECOMMENDED FOR PRODUCTION)
-      - name: Configure Databricks CLI with Service Principal
-        if: ${{ secrets.DATABRICKS_CLIENT_ID != '' }}
+      - name: Configure Databricks CLI
         env:
           DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
           DATABRICKS_CLIENT_ID: ${{ secrets.DATABRICKS_CLIENT_ID }}
           DATABRICKS_CLIENT_SECRET: ${{ secrets.DATABRICKS_CLIENT_SECRET }}
-        run: |
-          echo "Using Service Principal authentication (Production)"
-          echo "[DEFAULT]" > ~/.databrickscfg
-          echo "host = $DATABRICKS_HOST" >> ~/.databrickscfg
-          echo "client_id = $DATABRICKS_CLIENT_ID" >> ~/.databrickscfg
-          echo "client_secret = $DATABRICKS_CLIENT_SECRET" >> ~/.databrickscfg
-      
-      # Option 2: Using Personal Access Token (FALLBACK FOR DEVELOPMENT)
-      - name: Configure Databricks CLI with Token
-        if: ${{ secrets.DATABRICKS_CLIENT_ID == '' }}
-        env:
-          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
         run: |
-          echo "Using PAT authentication (Development only)"
-          echo "[DEFAULT]" > ~/.databrickscfg
-          echo "host = $DATABRICKS_HOST" >> ~/.databrickscfg
-          echo "token = $DATABRICKS_TOKEN" >> ~/.databrickscfg
+          # Option 1: Service Principal (RECOMMENDED FOR PRODUCTION)
+          # Option 2: Personal Access Token (FALLBACK FOR DEVELOPMENT)
+          if [ -n "$DATABRICKS_CLIENT_ID" ]; then
+            echo "Using Service Principal authentication (Production)"
+            echo "[DEFAULT]" > ~/.databrickscfg
+            echo "host = $DATABRICKS_HOST" >> ~/.databrickscfg
+            echo "client_id = $DATABRICKS_CLIENT_ID" >> ~/.databrickscfg
+            echo "client_secret = $DATABRICKS_CLIENT_SECRET" >> ~/.databrickscfg
+          else
+            echo "Using PAT authentication (Development only)"
+            echo "[DEFAULT]" > ~/.databrickscfg
+            echo "host = $DATABRICKS_HOST" >> ~/.databrickscfg
+            echo "token = $DATABRICKS_TOKEN" >> ~/.databrickscfg
+          fi
       
       - name: Deploy to Databricks Workspace
         run: |
