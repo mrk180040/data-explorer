@@ -1,0 +1,90 @@
+name: Deploy Databricks App (Production)
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+env:
+  APP_NAME: data-explorer
+  WORKSPACE_PATH: /Workspace/Apps/data-explorer-app
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      
+      - name: Install Databricks CLI
+        run: |
+          pip install databricks-cli
+      
+      # Option 1: Using Service Principal (RECOMMENDED FOR PRODUCTION)
+      - name: Configure Databricks CLI with Service Principal
+        if: ${{ secrets.DATABRICKS_CLIENT_ID != '' }}
+        env:
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_CLIENT_ID: ${{ secrets.DATABRICKS_CLIENT_ID }}
+          DATABRICKS_CLIENT_SECRET: ${{ secrets.DATABRICKS_CLIENT_SECRET }}
+        run: |
+          echo "Using Service Principal authentication (Production)"
+          echo "[DEFAULT]" > ~/.databrickscfg
+          echo "host = $DATABRICKS_HOST" >> ~/.databrickscfg
+          echo "client_id = $DATABRICKS_CLIENT_ID" >> ~/.databrickscfg
+          echo "client_secret = $DATABRICKS_CLIENT_SECRET" >> ~/.databrickscfg
+      
+      # Option 2: Using Personal Access Token (FALLBACK FOR DEVELOPMENT)
+      - name: Configure Databricks CLI with Token
+        if: ${{ secrets.DATABRICKS_CLIENT_ID == '' }}
+        env:
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+        run: |
+          echo "Using PAT authentication (Development only)"
+          echo "[DEFAULT]" > ~/.databrickscfg
+          echo "host = $DATABRICKS_HOST" >> ~/.databrickscfg
+          echo "token = $DATABRICKS_TOKEN" >> ~/.databrickscfg
+      
+      - name: Deploy to Databricks Workspace
+        run: |
+          # Create workspace directory if it doesn't exist
+          databricks workspace mkdirs $WORKSPACE_PATH || true
+          
+          # Upload all files to workspace
+          databricks workspace import-dir . $WORKSPACE_PATH --overwrite
+      
+      - name: Deploy Databricks App
+        env:
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+        run: |
+          # Check if app exists
+          APP_EXISTS=$(databricks apps list --output json | grep -o "$APP_NAME" || echo "")
+          
+          if [ -z "$APP_EXISTS" ]; then
+            echo "Creating new app: $APP_NAME"
+            databricks apps create $APP_NAME \
+              --source-code-path $WORKSPACE_PATH
+          else
+            echo "Updating existing app: $APP_NAME"
+            databricks apps update $APP_NAME \
+              --source-code-path $WORKSPACE_PATH
+          fi
+          
+          # Start the app
+          databricks apps start $APP_NAME
+      
+      - name: Get App URL
+        run: |
+          echo "✅ App deployed successfully!"
+          databricks apps get $APP_NAME
+          echo ""
+          echo "🌐 Access your app in the Databricks Apps UI"
