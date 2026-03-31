@@ -33,25 +33,24 @@ jobs:
           DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
         run: |
-          # Configure Databricks CLI
-          databricks configure --host "$DATABRICKS_HOST" --token
+          # Modern CLI uses env vars automatically; no need for 'databricks configure'
           
           # Create workspace directories
-          databricks workspace mkdirs "$WORKSPACE_DIR" || true
-          databricks workspace mkdirs "$WORKSPACE_DIR/static" || true
+          databricks workspace mkdirs "$WORKSPACE_DIR"
+          databricks workspace mkdirs "$WORKSPACE_DIR/static"
           
           echo "📦 Uploading app files to Databricks workspace..."
           
-          # Upload main files (correct syntax: target path first, then --file flag)
-          databricks workspace import "$WORKSPACE_DIR/app.py" --file app.py --language PYTHON --overwrite
-          databricks workspace import "$WORKSPACE_DIR/app.yaml" --file app.yaml --overwrite
-          databricks workspace import "$WORKSPACE_DIR/requirements.txt" --file requirements.txt --overwrite
-          databricks workspace import "$WORKSPACE_DIR/README.md" --file README.md --overwrite
+          # Correct Syntax: databricks workspace import [LOCAL_PATH] [REMOTE_PATH] --overwrite
+          databricks workspace import app.py "$WORKSPACE_DIR/app.py" --language PYTHON --overwrite
+          databricks workspace import app.yaml "$WORKSPACE_DIR/app.yaml" --overwrite
+          databricks workspace import requirements.txt "$WORKSPACE_DIR/requirements.txt" --overwrite
+          databricks workspace import README.md "$WORKSPACE_DIR/README.md" --overwrite
           
           # Upload static files
-          databricks workspace import "$WORKSPACE_DIR/static/index.html" --file static/index.html --language HTML --overwrite
-          databricks workspace import "$WORKSPACE_DIR/static/style.css" --file static/style.css --overwrite
-          databricks workspace import "$WORKSPACE_DIR/static/app.js" --file static/app.js --language JAVASCRIPT --overwrite
+          databricks workspace import static/index.html "$WORKSPACE_DIR/static/index.html" --language HTML --overwrite
+          databricks workspace import static/style.css "$WORKSPACE_DIR/static/style.css" --overwrite
+          databricks workspace import static/app.js "$WORKSPACE_DIR/static/app.js" --language JAVASCRIPT --overwrite
           
           echo "✅ All files uploaded successfully!"
       
