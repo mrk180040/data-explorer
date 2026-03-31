@@ -1,78 +1,15 @@
-name: Deploy Databricks App
+echo "📦 Uploading app files to Databricks workspace..."
 
-on:
-  push:
-    branches:
-      - main
-      - master
-  workflow_dispatch:
+# Pattern: databricks workspace import [REMOTE_PATH] --file [LOCAL_PATH] --overwrite
 
-env:
-  APP_NAME: data-explorer
-  WORKSPACE_DIR: /Workspace/Apps/data-explorer
+databricks workspace import "$WORKSPACE_DIR/app.py" --file app.py --language PYTHON --overwrite
+databricks workspace import "$WORKSPACE_DIR/app.yaml" --file app.yaml --overwrite
+databricks workspace import "$WORKSPACE_DIR/requirements.txt" --file requirements.txt --overwrite
+databricks workspace import "$WORKSPACE_DIR/README.md" --file README.md --overwrite
 
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-      
-      - name: Install Databricks CLI
-        run: |
-          curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh
-      
-      - name: Upload files to Databricks Workspace
-        env:
-          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
-          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
-        run: |
-          # Modern CLI uses env vars automatically; no need for 'databricks configure'
-          
-          # Create workspace directories
-          databricks workspace mkdirs "$WORKSPACE_DIR"
-          databricks workspace mkdirs "$WORKSPACE_DIR/static"
-          
-          echo "📦 Uploading app files to Databricks workspace..."
-          
-          # Correct Syntax: databricks workspace import [LOCAL_PATH] [REMOTE_PATH] --overwrite
-          databricks workspace import app.py "$WORKSPACE_DIR/app.py" --language PYTHON --overwrite
-          databricks workspace import app.yaml "$WORKSPACE_DIR/app.yaml" --overwrite
-          databricks workspace import requirements.txt "$WORKSPACE_DIR/requirements.txt" --overwrite
-          databricks workspace import README.md "$WORKSPACE_DIR/README.md" --overwrite
-          
-          # Upload static files
-          databricks workspace import static/index.html "$WORKSPACE_DIR/static/index.html" --language HTML --overwrite
-          databricks workspace import static/style.css "$WORKSPACE_DIR/static/style.css" --overwrite
-          databricks workspace import static/app.js "$WORKSPACE_DIR/static/app.js" --language JAVASCRIPT --overwrite
-          
-          echo "✅ All files uploaded successfully!"
-      
-      - name: Deployment Summary
-        run: |
-          echo "============================================"
-          echo "🎉 DEPLOYMENT SUCCESSFUL"
-          echo "============================================"
-          echo ""
-          echo "📍 Files uploaded to: $WORKSPACE_DIR"
-          echo ""
-          echo "📋 Next steps (first time only):"
-          echo "   1. Go to Databricks workspace"
-          echo "   2. Navigate to 'Apps'"
-          echo "   3. Click 'Create App'"
-          echo "   4. Source: 'From workspace files'"
-          echo "   5. Path: $WORKSPACE_DIR"
-          echo "   6. Name: $APP_NAME"
-          echo "   7. Click 'Create'"
-          echo ""
-          echo "🔄 After initial setup:"
-          echo "   Every push to main will auto-update the files!"
-          echo "   Your app will automatically reflect changes."
-          echo ""
-          echo "============================================"
+# Upload static files
+databricks workspace import "$WORKSPACE_DIR/static/index.html" --file static/index.html --language HTML --overwrite
+databricks workspace import "$WORKSPACE_DIR/static/style.css" --file static/style.css --overwrite
+databricks workspace import "$WORKSPACE_DIR/static/app.js" --file static/app.js --language JAVASCRIPT --overwrite
+
+echo "✅ All files uploaded successfully!"
