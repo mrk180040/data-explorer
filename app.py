@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from databricks import sql
 import os
 import re
@@ -87,14 +87,7 @@ def is_safe_readonly_query(query_text):
 
 @app.route('/')
 def index():
-    return app.send_static_file('index.html')
-
-
-@app.route('/<path:path>')
-def serve_static(path):
-    if path.startswith('api/'):
-        return jsonify({'error': 'Not found'}), 404
-    return app.send_static_file(path)
+    return send_from_directory('static', 'index.html')
 
 @app.route('/api/health')
 def health():
