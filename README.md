@@ -284,4 +284,4 @@ Feel free to modify and extend this application for your specific use case.
 
 ---
 
-**Built with ❤️ for Databricks**
+**Built with ❤️ for Databricks.**
