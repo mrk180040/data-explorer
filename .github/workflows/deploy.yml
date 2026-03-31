@@ -58,20 +58,22 @@ jobs:
 
           echo "📦 Uploading app files to Databricks workspace..."
 
+          # Reset workspace path to avoid file/folder type conflicts from prior imports
+          databricks workspace delete "$WORKSPACE_DIR" --recursive || true
           databricks workspace mkdirs "$WORKSPACE_DIR"
           databricks workspace mkdirs "$WORKSPACE_DIR/static"
 
           # Pattern: databricks workspace import [REMOTE_PATH] --file [LOCAL_PATH] --overwrite
           
-          databricks workspace import "$WORKSPACE_DIR/app.py" --file app.py --overwrite
-          databricks workspace import "$WORKSPACE_DIR/app.yaml" --file app.yaml --overwrite
-          databricks workspace import "$WORKSPACE_DIR/requirements.txt" --file requirements.txt --overwrite
-          databricks workspace import "$WORKSPACE_DIR/README.md" --file README.md --overwrite
+          databricks workspace import "$WORKSPACE_DIR/app.py" --file app.py
+          databricks workspace import "$WORKSPACE_DIR/app.yaml" --file app.yaml
+          databricks workspace import "$WORKSPACE_DIR/requirements.txt" --file requirements.txt
+          databricks workspace import "$WORKSPACE_DIR/README.md" --file README.md
           
           # Upload static files
-          databricks workspace import "$WORKSPACE_DIR/static/index.html" --file static/index.html --overwrite
-          databricks workspace import "$WORKSPACE_DIR/static/style.css" --file static/style.css --overwrite
-          databricks workspace import "$WORKSPACE_DIR/static/app.js" --file static/app.js --overwrite
+          databricks workspace import "$WORKSPACE_DIR/static/index.html" --file static/index.html
+          databricks workspace import "$WORKSPACE_DIR/static/style.css" --file static/style.css
+          databricks workspace import "$WORKSPACE_DIR/static/app.js" --file static/app.js
           
           echo "✅ All files uploaded successfully!"
       
