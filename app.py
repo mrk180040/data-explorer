@@ -2,8 +2,10 @@ from flask import Flask, request, jsonify, send_from_directory
 from databricks import sql
 import os
 import re
+import time
 
 app = Flask(__name__, static_folder='static', static_url_path='')
+APP_START_TIME = time.time()
 
 MAX_QUERY_LIMIT = 1000
 SAFE_IDENTIFIER_RE = re.compile(r'^[A-Za-z0-9_-]+$')
@@ -90,6 +92,24 @@ def index():
 @app.route('/api/health')
 def health():
     return jsonify({'status': 'healthy', 'message': 'Data Explorer API is running'})
+
+
+@app.route('/metrics')
+def metrics():
+    uptime_seconds = int(time.time() - APP_START_TIME)
+    metrics_payload = (
+        '# HELP app_up Whether the application is running.\n'
+        '# TYPE app_up gauge\n'
+        'app_up 1\n'
+        '# HELP app_uptime_seconds Application uptime in seconds.\n'
+        '# TYPE app_uptime_seconds counter\n'
+        f'app_uptime_seconds {uptime_seconds}\n'
+    )
+    return (
+        metrics_payload,
+        200,
+        {'Content-Type': 'text/plain; version=0.0.4; charset=utf-8'}
+    )
 
 @app.route('/api/catalogs')
 def get_catalogs():
