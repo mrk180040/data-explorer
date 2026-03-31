@@ -36,44 +36,44 @@ jobs:
           # Configure Databricks CLI
           databricks configure --host "$DATABRICKS_HOST" --token
           
-          # Create workspace directory
+          # Create workspace directories
           databricks workspace mkdirs "$WORKSPACE_DIR" || true
-          
-          # Upload all files
-          echo "📦 Uploading app files to Databricks workspace..."
-          
-          # Upload main files
-          databricks workspace import app.py "$WORKSPACE_DIR/app.py" --language PYTHON --overwrite
-          databricks workspace import app.yaml "$WORKSPACE_DIR/app.yaml" --overwrite
-          databricks workspace import requirements.txt "$WORKSPACE_DIR/requirements.txt" --overwrite
-          databricks workspace import README.md "$WORKSPACE_DIR/README.md" --overwrite
-          
-          # Create static directory
           databricks workspace mkdirs "$WORKSPACE_DIR/static" || true
           
+          echo "📦 Uploading app files to Databricks workspace..."
+          
+          # Upload main files (correct syntax: target path first, then --file flag)
+          databricks workspace import "$WORKSPACE_DIR/app.py" --file app.py --language PYTHON --overwrite
+          databricks workspace import "$WORKSPACE_DIR/app.yaml" --file app.yaml --overwrite
+          databricks workspace import "$WORKSPACE_DIR/requirements.txt" --file requirements.txt --overwrite
+          databricks workspace import "$WORKSPACE_DIR/README.md" --file README.md --overwrite
+          
           # Upload static files
-          databricks workspace import static/index.html "$WORKSPACE_DIR/static/index.html" --language HTML --overwrite
-          databricks workspace import static/style.css "$WORKSPACE_DIR/static/style.css" --overwrite
-          databricks workspace import static/app.js "$WORKSPACE_DIR/static/app.js" --language JAVASCRIPT --overwrite
+          databricks workspace import "$WORKSPACE_DIR/static/index.html" --file static/index.html --language HTML --overwrite
+          databricks workspace import "$WORKSPACE_DIR/static/style.css" --file static/style.css --overwrite
+          databricks workspace import "$WORKSPACE_DIR/static/app.js" --file static/app.js --language JAVASCRIPT --overwrite
           
           echo "✅ All files uploaded successfully!"
       
-      - name: App Deployment Instructions
+      - name: Deployment Summary
         run: |
           echo "============================================"
-          echo "🚀 FILES UPLOADED TO DATABRICKS"
+          echo "🎉 DEPLOYMENT SUCCESSFUL"
           echo "============================================"
           echo ""
-          echo "📍 Location: $WORKSPACE_DIR"
+          echo "📍 Files uploaded to: $WORKSPACE_DIR"
           echo ""
-          echo "📋 To create the Databricks App (first time only):"
+          echo "📋 Next steps (first time only):"
           echo "   1. Go to Databricks workspace"
-          echo "   2. Click 'Apps' in the sidebar"
+          echo "   2. Navigate to 'Apps'"
           echo "   3. Click 'Create App'"
-          echo "   4. Choose 'From workspace files'"
+          echo "   4. Source: 'From workspace files'"
           echo "   5. Path: $WORKSPACE_DIR"
           echo "   6. Name: $APP_NAME"
           echo "   7. Click 'Create'"
           echo ""
-          echo "✅ After app is created, it will auto-update on every push!"
+          echo "🔄 After initial setup:"
+          echo "   Every push to main will auto-update the files!"
+          echo "   Your app will automatically reflect changes."
+          echo ""
           echo "============================================"
