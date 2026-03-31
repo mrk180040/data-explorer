@@ -1,15 +1,87 @@
-echo "📦 Uploading app files to Databricks workspace..."
 
-# Pattern: databricks workspace import [REMOTE_PATH] --file [LOCAL_PATH] --overwrite
+name: Deploy Databricks App
 
-databricks workspace import "$WORKSPACE_DIR/app.py" --file app.py --language PYTHON --overwrite
-databricks workspace import "$WORKSPACE_DIR/app.yaml" --file app.yaml --overwrite
-databricks workspace import "$WORKSPACE_DIR/requirements.txt" --file requirements.txt --overwrite
-databricks workspace import "$WORKSPACE_DIR/README.md" --file README.md --overwrite
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
 
-# Upload static files
-databricks workspace import "$WORKSPACE_DIR/static/index.html" --file static/index.html --language HTML --overwrite
-databricks workspace import "$WORKSPACE_DIR/static/style.css" --file static/style.css --overwrite
-databricks workspace import "$WORKSPACE_DIR/static/app.js" --file static/app.js --language JAVASCRIPT --overwrite
+env:
+  APP_NAME: data-explorer
+  WORKSPACE_DIR: /Workspace/Apps/data-explorer
 
-echo "✅ All files uploaded successfully!"
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Verify files after checkout
+        run: |
+          echo "📂 Current directory:"
+          pwd
+          echo ""
+          echo "📋 Files in repository:"
+          ls -la
+          echo ""
+          echo "📋 Files in static directory:"
+          ls -la static/ || echo "static/ directory not found"
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      
+      - name: Install Databricks CLI
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh
+      
+      - name: Upload files to Databricks Workspace
+        env:
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+        run: |
+          # Configure Databricks CLI
+          databricks configure --host "$DATABRICKS_HOST" --token
+          
+          echo "📦 Uploading app files to Databricks workspace..."
+
+          # Pattern: databricks workspace import [REMOTE_PATH] --file [LOCAL_PATH] --overwrite
+          
+          databricks workspace import "$WORKSPACE_DIR/app.py" --file app.py --language PYTHON --overwrite
+          databricks workspace import "$WORKSPACE_DIR/app.yaml" --file app.yaml --overwrite
+          databricks workspace import "$WORKSPACE_DIR/requirements.txt" --file requirements.txt --overwrite
+          databricks workspace import "$WORKSPACE_DIR/README.md" --file README.md --overwrite
+          
+          # Upload static files
+          databricks workspace import "$WORKSPACE_DIR/static/index.html" --file static/index.html --language HTML --overwrite
+          databricks workspace import "$WORKSPACE_DIR/static/style.css" --file static/style.css --overwrite
+          databricks workspace import "$WORKSPACE_DIR/static/app.js" --file static/app.js --language JAVASCRIPT --overwrite
+          
+          echo "✅ All files uploaded successfully!"
+      
+      - name: Deployment Summary
+        run: |
+          echo "============================================"
+          echo "🎉 DEPLOYMENT SUCCESSFUL"
+          echo "============================================"
+          echo ""
+          echo "📍 Files uploaded to: $WORKSPACE_DIR"
+          echo ""
+          echo "📋 Next steps (first time only):"
+          echo "   1. Go to Databricks workspace"
+          echo "   2. Navigate to 'Apps'"
+          echo "   3. Click 'Create App'"
+          echo "   4. Source: 'From workspace files'"
+          echo "   5. Path: $WORKSPACE_DIR"
+          echo "   6. Name: $APP_NAME"
+          echo "   7. Click 'Create'"
+          echo ""
+          echo "🔄 After initial setup:"
+          echo "   Every push to main will auto-update the files!"
+          echo ""
+          echo "============================================"
