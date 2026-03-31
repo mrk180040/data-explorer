@@ -1,4 +1,4 @@
-name: Deploy Databricks App (Production)
+name: Deploy Databricks App
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
 
 env:
   APP_NAME: data-explorer
-  WORKSPACE_PATH: /Workspace/Apps/data-explorer-app
+  WORKSPACE_DIR: /Workspace/Apps/data-explorer
 
 jobs:
   deploy:
@@ -19,62 +19,61 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       
-      - name: Install Databricks CLI
-        uses: databricks/setup-cli@v0.295.0
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
       
-      - name: Configure Databricks CLI
+      - name: Install Databricks CLI
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh
+      
+      - name: Upload files to Databricks Workspace
         env:
           DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
-          DATABRICKS_CLIENT_ID: ${{ secrets.DATABRICKS_CLIENT_ID }}
-          DATABRICKS_CLIENT_SECRET: ${{ secrets.DATABRICKS_CLIENT_SECRET }}
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
         run: |
-          # Option 1: Service Principal (RECOMMENDED FOR PRODUCTION)
-          # Option 2: Personal Access Token (FALLBACK FOR DEVELOPMENT)
-          if [ -n "$DATABRICKS_CLIENT_ID" ]; then
-            echo "Using Service Principal authentication (Production)"
-            echo "[DEFAULT]" > ~/.databrickscfg
-            echo "host = $DATABRICKS_HOST" >> ~/.databrickscfg
-            echo "client_id = $DATABRICKS_CLIENT_ID" >> ~/.databrickscfg
-            echo "client_secret = $DATABRICKS_CLIENT_SECRET" >> ~/.databrickscfg
-          else
-            echo "Using PAT authentication (Development only)"
-            echo "[DEFAULT]" > ~/.databrickscfg
-            echo "host = $DATABRICKS_HOST" >> ~/.databrickscfg
-            echo "token = $DATABRICKS_TOKEN" >> ~/.databrickscfg
-          fi
-      
-      - name: Deploy to Databricks Workspace
-        run: |
-          # Create workspace directory if it doesn't exist
-          databricks workspace mkdirs $WORKSPACE_PATH || true
+          # Configure Databricks CLI
+          databricks configure --host "$DATABRICKS_HOST" --token
           
-          # Upload all files to workspace
-          databricks workspace import-dir . $WORKSPACE_PATH --overwrite
-      
-      - name: Deploy Databricks App
-        env:
-          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
-        run: |
-          # Check if app exists
-          APP_EXISTS=$(databricks apps list --output json | grep -o "$APP_NAME" || echo "")
+          # Create workspace directory
+          databricks workspace mkdirs "$WORKSPACE_DIR" || true
           
-          if [ -z "$APP_EXISTS" ]; then
-            echo "Creating new app: $APP_NAME"
-            databricks apps create $APP_NAME \
-              --source-code-path $WORKSPACE_PATH
-          else
-            echo "Updating existing app: $APP_NAME"
-            databricks apps update $APP_NAME \
-              --source-code-path $WORKSPACE_PATH
-          fi
+          # Upload all files
+          echo "📦 Uploading app files to Databricks workspace..."
           
-          # Start the app
-          databricks apps start $APP_NAME
+          # Upload main files
+          databricks workspace import app.py "$WORKSPACE_DIR/app.py" --language PYTHON --overwrite
+          databricks workspace import app.yaml "$WORKSPACE_DIR/app.yaml" --overwrite
+          databricks workspace import requirements.txt "$WORKSPACE_DIR/requirements.txt" --overwrite
+          databricks workspace import README.md "$WORKSPACE_DIR/README.md" --overwrite
+          
+          # Create static directory
+          databricks workspace mkdirs "$WORKSPACE_DIR/static" || true
+          
+          # Upload static files
+          databricks workspace import static/index.html "$WORKSPACE_DIR/static/index.html" --language HTML --overwrite
+          databricks workspace import static/style.css "$WORKSPACE_DIR/static/style.css" --overwrite
+          databricks workspace import static/app.js "$WORKSPACE_DIR/static/app.js" --language JAVASCRIPT --overwrite
+          
+          echo "✅ All files uploaded successfully!"
       
-      - name: Get App URL
+      - name: App Deployment Instructions
         run: |
-          echo "✅ App deployed successfully!"
-          databricks apps get $APP_NAME
+          echo "============================================"
+          echo "🚀 FILES UPLOADED TO DATABRICKS"
+          echo "============================================"
           echo ""
-          echo "🌐 Access your app in the Databricks Apps UI"
+          echo "📍 Location: $WORKSPACE_DIR"
+          echo ""
+          echo "📋 To create the Databricks App (first time only):"
+          echo "   1. Go to Databricks workspace"
+          echo "   2. Click 'Apps' in the sidebar"
+          echo "   3. Click 'Create App'"
+          echo "   4. Choose 'From workspace files'"
+          echo "   5. Path: $WORKSPACE_DIR"
+          echo "   6. Name: $APP_NAME"
+          echo "   7. Click 'Create'"
+          echo ""
+          echo "✅ After app is created, it will auto-update on every push!"
+          echo "============================================"
