@@ -63,17 +63,17 @@ jobs:
           databricks workspace mkdirs "$WORKSPACE_DIR"
           databricks workspace mkdirs "$WORKSPACE_DIR/static"
 
-          # Pattern: databricks workspace import [REMOTE_PATH] --file [LOCAL_PATH] --overwrite
+          # Use RAW format so plain files are uploaded as workspace files (not notebook/source archives)
           
-          databricks workspace import "$WORKSPACE_DIR/app.py" --file app.py
-          databricks workspace import "$WORKSPACE_DIR/app.yaml" --file app.yaml
-          databricks workspace import "$WORKSPACE_DIR/requirements.txt" --file requirements.txt
-          databricks workspace import "$WORKSPACE_DIR/README.md" --file README.md
+          databricks workspace import "$WORKSPACE_DIR/app.py" --file app.py --format RAW
+          databricks workspace import "$WORKSPACE_DIR/app.yaml" --file app.yaml --format RAW
+          databricks workspace import "$WORKSPACE_DIR/requirements.txt" --file requirements.txt --format RAW
+          databricks workspace import "$WORKSPACE_DIR/README.md" --file README.md --format RAW
           
           # Upload static files
-          databricks workspace import "$WORKSPACE_DIR/static/index.html" --file static/index.html
-          databricks workspace import "$WORKSPACE_DIR/static/style.css" --file static/style.css
-          databricks workspace import "$WORKSPACE_DIR/static/app.js" --file static/app.js
+          databricks workspace import "$WORKSPACE_DIR/static/index.html" --file static/index.html --format RAW
+          databricks workspace import "$WORKSPACE_DIR/static/style.css" --file static/style.css --format RAW
+          databricks workspace import "$WORKSPACE_DIR/static/app.js" --file static/app.js --format RAW
           
           echo "✅ All files uploaded successfully!"
       
