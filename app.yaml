@@ -6,7 +6,7 @@ command:
 resources:
   # SQL Warehouse for data queries
   sql_warehouse:
-    name: "Starter Warehouse"
+    name: "Serverless Starter Warehouse"
     permission: "CAN_USE"
 
 env:
