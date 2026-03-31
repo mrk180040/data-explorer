@@ -151,6 +151,9 @@ The following environment variables are automatically populated by Databricks Ap
 * `DATABRICKS_HTTP_PATH`: SQL Warehouse HTTP path
 * `DATABRICKS_TOKEN`: Authentication token
 
+Optional hardening variable:
+* `ALLOWED_ORIGIN`: Allowed CORS origin for API calls (if unset, CORS origin is not added)
+
 ## 💡 Usage
 
 ### Browse Data
@@ -161,7 +164,7 @@ The following environment variables are automatically populated by Databricks Ap
 
 ### Custom SQL Query
 1. Click **Custom SQL Query** button
-2. Enter your SQL query
+2. Enter a **read-only single-statement** SQL query (`SELECT`, `WITH`, `SHOW`, `DESCRIBE`, `EXPLAIN`)
 3. Click **Execute Query**
 4. View results in the table below
 
@@ -235,7 +238,7 @@ function exportToCSV(data) {
 ## 🔐 Security
 
 * Authentication is handled automatically by Databricks Apps
-* SQL injection is prevented by using parameterized queries
+* SQL input risk is reduced by strict identifier validation, query allowlisting, and limit bounds
 * CORS is configured for same-origin requests
 * GitHub secrets store sensitive credentials securely
 * Personal access tokens should have minimal required permissions
